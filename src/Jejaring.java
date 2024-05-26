@@ -90,7 +90,7 @@ class Graph {
         }
     }
 
-    void addEdge(String username1, String username2) {
+    void addDirectionalEdge(String username1, String username2) {
         int index1 = getVertexIndex(username1);
         int index2 = getVertexIndex(username2);
         if (index1 != -1 && index2 != -1) {
@@ -98,6 +98,11 @@ class Graph {
             adjacencyLists[index1].add(vertexToAdd);
             vertices[index2].numberOfFollowers++;
         }
+    }
+
+    void addBidirectionalEdge(String username1, String username2) {
+        addDirectionalEdge(username1, username2);
+        addDirectionalEdge(username2, username1);
     }
 
     int getVertexIndex(String username) {
@@ -145,6 +150,30 @@ class Graph {
         return -1;
     }
     
+    void DFSUtil(int start, boolean[] visited) {
+        visited[start] = true;
+        Vertex temp = adjacencyLists[start].head;
+        while (temp != null) {
+            int index = getVertexIndex(temp.username);
+            if (!visited[index]) {
+                DFSUtil(index, visited);
+            }
+            temp = temp.next;
+        }
+    }
+
+    int numberOfGroups() {
+        boolean[] visited = new boolean[size];
+        int groupCount = 0;
+
+        for (int i = 0; i < size; i++) {
+            if (!visited[i] && vertices[i] != null) {
+                DFSUtil(i, visited);
+                groupCount++;
+            }
+        }
+        return groupCount;
+    }
 }
 
 class Queue {
@@ -197,44 +226,48 @@ class Queue {
 }
 
 public class Jejaring {
-    Graph graph;
+    Graph actualGraph;
+    Graph undiGraph;
     int size;
     int connection;
 
     public Jejaring(int size, int connection) {
         this.size = size;
         this.connection = connection;
-        this.graph = new Graph(size);
+        this.actualGraph = new Graph(size);
+        this.undiGraph = new Graph(size);
     }
 
     public void insertUser(String username, String[] favorites) {
-        graph.addVertex(username, favorites);
+        actualGraph.addVertex(username, favorites);
+        undiGraph.addVertex(username, favorites);
     }
 
     public void connectUser(String username1, String username2) {
-        graph.addEdge(username1, username2);
+        actualGraph.addDirectionalEdge(username1, username2);
+        undiGraph.addBidirectionalEdge(username1, username2);
     }
 
     public String[] mostFollowedUser() {
         int maxFollowers = 0;
-        for (int i = 0; i < graph.count; i++) {
-            if (graph.vertices[i].numberOfFollowers > maxFollowers) {
-                maxFollowers = graph.vertices[i].numberOfFollowers;
+        for (int i = 0; i < actualGraph.count; i++) {
+            if (actualGraph.vertices[i].numberOfFollowers > maxFollowers) {
+                maxFollowers = actualGraph.vertices[i].numberOfFollowers;
             }
         }
 
         int count = 0;
-        for (int i = 0; i < graph.count; i++) {
-            if (graph.vertices[i].numberOfFollowers == maxFollowers) {
+        for (int i = 0; i < actualGraph.count; i++) {
+            if (actualGraph.vertices[i].numberOfFollowers == maxFollowers) {
                 count++;
             }
         }
 
         String[] mostFollowedUsers = new String[count];
         int index = 0;
-        for (int i = 0; i < graph.count; i++) {
-            if (graph.vertices[i].numberOfFollowers == maxFollowers) {
-                mostFollowedUsers[index] = graph.vertices[i].username;
+        for (int i = 0; i < actualGraph.count; i++) {
+            if (actualGraph.vertices[i].numberOfFollowers == maxFollowers) {
+                mostFollowedUsers[index] = actualGraph.vertices[i].username;
                 index++;
             }
         }
@@ -254,15 +287,32 @@ public class Jejaring {
 
     public int minimumCuitUlang(String username1, String username2) {
         //jarak terpendek dari username2 ke username1
-        int distance = graph.shortestDistance(username2, username1);
+        int distance = actualGraph.shortestDistance(username2, username1);
         return distance;
-        
+    }
+
+    public int numberOfGroups(){
+        return undiGraph.numberOfGroups();
     }
 
     public void printJejaring() {
-        for (int i = 0; i < graph.count; i++) {
-            Vertex vertex = graph.vertices[i];
-            LinkedList list = graph.adjacencyLists[i];
+        for (int i = 0; i < actualGraph.count; i++) {
+            Vertex vertex = actualGraph.vertices[i];
+            LinkedList list = actualGraph.adjacencyLists[i];
+            System.out.print(vertex.username + " -> ");
+            Vertex temp = list.head;
+            while (temp != null) {
+                System.out.print(temp.username + " -> ");
+                temp = temp.next;
+            }
+            System.out.println();
+        }
+
+        System.out.println();
+
+        for (int i = 0; i < undiGraph.count; i++) {
+            Vertex vertex = undiGraph.vertices[i];
+            LinkedList list = undiGraph.adjacencyLists[i];
             System.out.print(vertex.username + " -> ");
             Vertex temp = list.head;
             while (temp != null) {
@@ -327,6 +377,8 @@ public class Jejaring {
                 String username1 = command.split(" ")[1];
                 String username2 = command.split(" ")[2];
                 System.out.println(jejaring.minimumCuitUlang(username1, username2));
+            } else if (firstCommand.equals("numgroup")) {
+                System.out.println(jejaring.numberOfGroups());
             }
         }
 
