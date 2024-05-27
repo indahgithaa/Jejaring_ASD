@@ -540,7 +540,7 @@ public class Jejaring {
                     for (int i = 0; i < mostFollowedUsers.length; i++) {
                         System.out.print(mostFollowedUsers[i]);
                         if (i < mostFollowedUsers.length - 1) {
-                            System.out.print(", ");
+                            System.out.print(",");
                         }
                     }
                     System.out.println();
@@ -569,6 +569,8 @@ public class Jejaring {
             } else if (firstCommand.equals("suggestfriend")) {
                 String username = command.split(" ")[1];
                 jejaring.findFollowersofUserFollowing(username);
+            } else {
+                System.out.println("WRONG FORMAT");
             }
         }
         scanner.close(); 
