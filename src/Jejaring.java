@@ -414,6 +414,72 @@ public class Jejaring {
         }
     }
 
+    public void findFollowersofUserFollowing(String username) {
+        int userIndex = undiGraph.getVertexIndex(username);
+    
+        if (userIndex == -1) {
+            System.out.println("User not found.");
+            return;
+        }
+    
+        LinkedList followingList = undiGraph.adjacencyLists[userIndex];
+        String[] followersArray = new String[undiGraph.vertices.length];
+        int followersCount = 0;
+    
+        boolean[] followedByUser = new boolean[undiGraph.vertices.length];
+        
+        Vertex tempFollowing = followingList.head;
+        while (tempFollowing != null) {
+            int followingIndex = undiGraph.getVertexIndex(tempFollowing.username);
+            followedByUser[followingIndex] = true;
+            tempFollowing = tempFollowing.next;
+        }
+    
+        Vertex temp = followingList.head;
+        while (temp != null) {
+            int followingIndex = undiGraph.getVertexIndex(temp.username);
+            LinkedList followers = undiGraph.adjacencyLists[followingIndex];
+    
+            Vertex followerTemp = followers.head;
+            while (followerTemp != null) {
+                String followerName = followerTemp.username;
+                int followerIndex = undiGraph.getVertexIndex(followerName);
+                if (!followedByUser[followerIndex] && followerIndex != userIndex) {
+                    boolean alreadyExists = false;
+                    for (int i = 0; i < followersCount; i++) {
+                        if (followersArray[i] != null && followersArray[i].equals(followerName)) {
+                            alreadyExists = true;
+                            break;
+                        }
+                    }
+                    if (!alreadyExists) {
+                        followersArray[followersCount] = followerName;
+                        followersCount++;
+                    }
+                }
+                followerTemp = followerTemp.next;
+            }
+            temp = temp.next;
+        }
+    
+        for (int i = 0; i < followersCount - 1; i++) {
+            for (int j = 0; j < followersCount - i - 1; j++) {
+                if (followersArray[j] != null && followersArray[j + 1] != null && followersArray[j].compareTo(followersArray[j + 1]) > 0) {
+                    String tempFollower = followersArray[j];
+                    followersArray[j] = followersArray[j + 1];
+                    followersArray[j + 1] = tempFollower;
+                }
+            }
+        }
+
+        for (int i = 0; i < followersCount; i++) {
+            System.out.print(followersArray[i]);
+            if (i < followersCount - 1 && followersArray[i + 1] != null) {
+                System.out.print(",");
+            }
+        }
+    }    
+
     public void printJejaring() {
         for (int i = 0; i < actualGraph.count; i++) {
             Vertex vertex = actualGraph.vertices[i];
@@ -500,6 +566,9 @@ public class Jejaring {
                 System.out.println(jejaring.numberOfGroups());
             } else if (firstCommand.equals("grouptopic")) {
                 jejaring.topicDetection();
+            } else if (firstCommand.equals("suggestfriend")) {
+                String username = command.split(" ")[1];
+                jejaring.findFollowersofUserFollowing(username);
             }
         }
         scanner.close(); 
