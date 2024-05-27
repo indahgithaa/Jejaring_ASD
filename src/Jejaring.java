@@ -65,6 +65,14 @@ class LinkedList {
         }
         return -1;
     }
+
+    void print() {
+        Vertex temp = head;
+        while (temp != null) {
+            System.out.print(temp.username + " -> ");
+            temp = temp.next;
+        }
+    }
 }
 
 class Graph {
@@ -174,6 +182,39 @@ class Graph {
         }
         return groupCount;
     }
+
+    LinkedList[] connectedVerticesUndiGraph(int a) {
+        boolean[] visited = new boolean[size];
+        LinkedList[] connectedVertices = new LinkedList[a];
+        int groupCount = 0;
+    
+        for (int i = 0; i < size; i++) {
+            if (!visited[i]) {
+                connectedVertices[groupCount] = new LinkedList();
+                Queue queue = new Queue();
+                queue.enqueue(vertices[i].username);
+                visited[i] = true;
+    
+                while (!queue.isEmpty()) {
+                    String current = queue.dequeue();
+                    Vertex currentVertex = vertices[getVertexIndex(current)];
+                    connectedVertices[groupCount].add(currentVertex);
+    
+                    Vertex temp = adjacencyLists[getVertexIndex(current)].head;
+                    while (temp != null) {
+                        int neighborIndex = getVertexIndex(temp.username);
+                        if (!visited[neighborIndex]) {
+                            visited[neighborIndex] = true;
+                            queue.enqueue(temp.username);
+                        }
+                        temp = temp.next;
+                    }
+                }
+                groupCount++;
+            }
+        }
+        return connectedVertices;
+    }
 }
 
 class Queue {
@@ -222,6 +263,20 @@ class Queue {
         for (int i = 0; i < size; i++) {
             System.out.println(data[(front + i) % data.length]);
         }
+    }
+}
+
+class TopicCuit {
+    String topic;
+    int count;
+
+    public TopicCuit(String topic) {
+        this.topic = topic;
+        this.count = 1;
+    }
+
+    void incrementCount() {
+        count++;
     }
 }
 
@@ -286,13 +341,77 @@ public class Jejaring {
     }
 
     public int minimumCuitUlang(String username1, String username2) {
-        //jarak terpendek dari username2 ke username1
         int distance = actualGraph.shortestDistance(username2, username1);
         return distance;
     }
 
     public int numberOfGroups(){
         return undiGraph.numberOfGroups();
+    }
+
+    public void topicDetection() {
+        LinkedList[] e = undiGraph.connectedVerticesUndiGraph(undiGraph.numberOfGroups());
+
+        for (LinkedList list : e) {
+            if (list != null) {
+                Vertex temp = list.head;
+                TopicCuit[] topicCuits = new TopicCuit[3*undiGraph.vertices.length];
+                int topicCountIndex = 0;
+
+                while (temp != null) {
+                    for (String favorite : temp.favorites) {
+                        boolean found = false;
+                        for (int i = 0; i < topicCountIndex; i++) {
+                            if (topicCuits[i].topic.equals(favorite)) {
+                                topicCuits[i].incrementCount();
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found) {
+                            topicCuits[topicCountIndex] = new TopicCuit(favorite);
+                            topicCountIndex++;
+                        }
+                    }
+                    temp = temp.next;
+                }
+
+                int maxCount = 0;
+                for (int i = 0; i < topicCountIndex; i++) {
+                    if (topicCuits[i].count > maxCount) {
+                        maxCount = topicCuits[i].count;
+                    }
+                }
+
+                String[] topics = new String[topicCountIndex];
+                for (int i = 0; i < topicCountIndex; i++) {
+                    if (topicCuits[i].count == maxCount) {
+                        topics[i] = topicCuits[i].topic;
+                    }
+                }
+
+                for (int i = 0; i < topicCountIndex - 1; i++) {
+                    for (int j = 0; j < topicCountIndex - i - 1; j++) {
+                        if (topics[j] != null && topics[j + 1] != null && topics[j].compareTo(topics[j + 1]) > 0) {
+                            String tempTopic = topics[j];
+                            topics[j] = topics[j + 1];
+                            topics[j + 1] = tempTopic;
+                        }
+                    }
+                }
+
+                for (int i = 0; i < topics.length; i++) {
+                    if (topics[i] != null) {
+                        System.out.print(topics[i]);
+                        if (i < topics.length - 1 && topics[i + 1] != null) {
+                            System.out.print(",");
+                        }
+                    }
+                }
+
+                System.out.println();
+            }
+        }
     }
 
     public void printJejaring() {
@@ -379,11 +498,10 @@ public class Jejaring {
                 System.out.println(jejaring.minimumCuitUlang(username1, username2));
             } else if (firstCommand.equals("numgroup")) {
                 System.out.println(jejaring.numberOfGroups());
+            } else if (firstCommand.equals("grouptopic")) {
+                jejaring.topicDetection();
             }
         }
-
-        jejaring.printJejaring();
-
         scanner.close(); 
     }
 }
