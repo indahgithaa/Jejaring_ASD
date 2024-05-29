@@ -427,7 +427,7 @@ public class Jejaring {
         int userIndex = undiGraph.getVertexIndex(username);
     
         if (userIndex == -1) {
-            System.out.println("User not found.");
+            System.out.println("User tidak valid");
             return;
         }
     
